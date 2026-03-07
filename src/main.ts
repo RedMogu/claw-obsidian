@@ -36,6 +36,13 @@ export class ClawView extends ItemView {
         chatBox.style.gap = "10px";
         chatBox.style.height = "100%";
 
+        const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
+        messagesContainer.style.flexGrow = "2";
+        messagesContainer.style.overflowY = "auto";
+        messagesContainer.style.border = "1px solid var(--background-modifier-border)";
+        messagesContainer.style.padding = "10px";
+        messagesContainer.style.borderRadius = "4px";
+
         const textarea = chatBox.createEl("textarea", {
             placeholder: "Type a message..."
         });
@@ -64,13 +71,25 @@ export class ClawView extends ItemView {
                     method: "chat.send",
                     params: {
                         message: text,
-                        sessionKey: "agent:main:obsidian",
+                        sessionKey: "agent:main:main",
                         idempotencyKey: Date.now().toString()
                     }
                 };
                 console.log('%c[发送到 Gateway]', 'background: #222; color: #f39c12; font-size: 16px; font-weight: bold;', payload);
                 this.plugin.ws.send(JSON.stringify(payload));
                 new Notice("Message sent!");
+                const container = this.contentEl.querySelector(".claw-messages");
+                if (container) {
+                    const msgEl = document.createElement("div");
+                    msgEl.style.marginBottom = "8px";
+                    msgEl.style.padding = "8px";
+                    msgEl.style.background = "var(--interactive-accent)";
+                    msgEl.style.color = "var(--text-on-accent)";
+                    msgEl.style.borderRadius = "4px";
+                    msgEl.innerText = "You: " + text;
+                    container.appendChild(msgEl);
+                    container.scrollTop = container.scrollHeight;
+                }
                 textarea.value = "";
             } else {
                 new Notice("WebSocket is not connected.");
@@ -212,13 +231,20 @@ export default class MyPlugin extends Plugin {
 					}
 
 					if (message) {
-						const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-						if (activeView) {
-							const editor = activeView.editor;
-							const cursor = editor.getCursor();
-							editor.replaceRange(message, cursor);
-							const newOffset = editor.posToOffset(cursor) + message.length;
-							editor.setCursor(editor.offsetToPos(newOffset));
+						const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAW);
+						if (leaves.length > 0) {
+							const view = leaves[0]?.view as any;
+							const container = view.contentEl.querySelector(".claw-messages");
+							if (container) {
+								const msgEl = document.createElement("div");
+								msgEl.style.marginBottom = "8px";
+								msgEl.style.padding = "8px";
+								msgEl.style.background = "var(--background-secondary)";
+								msgEl.style.borderRadius = "4px";
+								msgEl.innerText = "🐱: " + message;
+								container.appendChild(msgEl);
+								container.scrollTop = container.scrollHeight;
+							}
 						}
 						return;
 					}
