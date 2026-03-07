@@ -166,11 +166,19 @@ export default class MyPlugin extends Plugin {
 						const nonce = parsed.payload?.nonce || parsed.nonce;
 						console.log("收到 connect.challenge，发送 connect.reply 握手包", nonce);
 						this.ws?.send(JSON.stringify({
+							type: "action",
 							action: "connect.reply",
-							event: "connect.reply",
 							payload: { nonce: nonce }
 						}));
-						setTimeout(() => { this.isEstablished = true; }, 500);
+						this.ws?.send(JSON.stringify({
+							action: "connect.reply",
+							nonce: nonce
+						}));
+						setTimeout(() => {
+							if (this.ws?.readyState === WebSocket.OPEN) {
+								this.isEstablished = true;
+							}
+						}, 500);
 						return;
 					}
 				} catch (err) {}
