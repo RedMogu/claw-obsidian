@@ -251,6 +251,12 @@ export default class MyPlugin extends Plugin {
 
 					// 3. Extract Message
 					let message = "";
+					
+                    // **CRITICAL FIX**: Only process messages intended for this specific session!
+                    if (parsed.type === "event" && parsed.payload?.sessionKey && parsed.payload.sessionKey !== "agent:main:obsidian") {
+                        return; // Ignore events from other sessions (like WhatsApp)
+                    }
+
 					if (parsed.type === "event") {
 						if (parsed.event === "chat.message") message = payload.message || "";
 						if (parsed.event === "agent" && payload.stream === "assistant" && payload.data?.delta) message = payload.data.delta;
