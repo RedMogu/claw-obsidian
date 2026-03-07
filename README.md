@@ -1,90 +1,50 @@
-# Obsidian Sample Plugin
+# OpenClaw Molt - Obsidian Native Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This is an Obsidian plugin designed to act as a native client for your [OpenClaw](https://openclaw.ai) Sovereign AI system. 
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+It completely bypasses traditional file-syncing methods (like iCloud or Google Drive) and establishes a direct **WebSocket** connection to your remote OpenClaw Gateway. This allows your personal AI Butler to live directly inside your Obsidian sidebar, enabling real-time, zero-latency collaboration.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## 🚀 Features
 
-## First time developing plugins?
+- **Native Sidebar Chat**: Adds a `Molt Chat` view to your Obsidian right sidebar.
+- **Direct WebSocket Link**: Connects directly to your OpenClaw Gateway.
+- **Zero-Sync Latency**: You talk to your AI, and it replies instantly, without waiting for cloud files to sync.
 
-Quick starting guide for new plugin devs:
+## 🛠️ Installation & Setup (Tailscale Environment)
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Since your OpenClaw Gateway is likely running on a remote server (e.g., an Azure VM) and your Obsidian is local (e.g., your Mac), this plugin defaults to connecting via a Tailscale IP.
 
-## Releasing new releases
+### 1. Prerequisites
+- You must have [Tailscale](https://tailscale.com/) installed and connected on the machine running Obsidian.
+- Your OpenClaw Gateway must be running and bound to its LAN/Tailscale IP (`gateway.bind: "lan"` in `openclaw.json`).
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
-
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
-
-## Adding your plugin to the community plugin list
-
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+### 2. Download and Build
+Open your terminal and run:
+```bash
+git clone https://github.com/RedMogu/molt-obsidian.git
+cd molt-obsidian
+npm install
+npm run build
 ```
 
-If you have multiple URLs, you can also do:
+### 3. Install to Obsidian
+1. Copy the built `molt-obsidian` folder into your Obsidian vault's plugin directory:
+   `YourVaultName/.obsidian/plugins/`
+2. If the folder `.obsidian` is hidden on your Mac, press `Cmd + Shift + .` in Finder to reveal it.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+### 4. Enable and Use
+1. Open Obsidian and go to **Settings > Community plugins**.
+2. If Safe Mode is ON, turn it OFF to allow local plugins.
+3. Scroll down to **Installed plugins** and toggle the switch for **OpenClaw Molt** to ON.
+4. Look at the left ribbon (the vertical toolbar). Click the **Open Molt Chat** icon (message bubble).
+5. A new chat panel will open in your right sidebar. 
 
-## API Documentation
+## 🔧 Configuration (Changing the IP)
+By default, the plugin connects to `ws://100.93.80.61:18789`.
+If your OpenClaw Gateway's Tailscale IP changes, you need to update it:
+1. Open `src/main.ts`.
+2. Find the line: `this.ws = new WebSocket('ws://100.93.80.61:18789');`
+3. Change the IP to your Gateway's IP.
+4. Re-run `npm run build` and restart the plugin in Obsidian.
 
-See https://docs.obsidian.md
+*(In future updates, this will be movable to the Obsidian Settings UI).*
