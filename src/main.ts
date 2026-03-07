@@ -36,13 +36,6 @@ export class ClawView extends ItemView {
         chatBox.style.gap = "10px";
         chatBox.style.height = "100%";
 
-        const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
-        messagesContainer.style.flexGrow = "2";
-        messagesContainer.style.overflowY = "auto";
-        messagesContainer.style.border = "1px solid var(--background-modifier-border)";
-        messagesContainer.style.padding = "10px";
-        messagesContainer.style.borderRadius = "4px";
-
         const textarea = chatBox.createEl("textarea", {
             placeholder: "Type a message..."
         });
@@ -78,18 +71,6 @@ export class ClawView extends ItemView {
                 console.log('%c[发送到 Gateway]', 'background: #222; color: #f39c12; font-size: 16px; font-weight: bold;', payload);
                 this.plugin.ws.send(JSON.stringify(payload));
                 new Notice("Message sent!");
-                const container = this.contentEl.querySelector(".claw-messages");
-                if (container) {
-                    const msgEl = document.createElement("div");
-                    msgEl.style.marginBottom = "8px";
-                    msgEl.style.padding = "8px";
-                    msgEl.style.background = "var(--interactive-accent)";
-                    msgEl.style.color = "var(--text-on-accent)";
-                    msgEl.style.borderRadius = "4px";
-                    msgEl.innerText = "You: " + text;
-                    container.appendChild(msgEl);
-                    container.scrollTop = container.scrollHeight;
-                }
                 textarea.value = "";
             } else {
                 new Notice("WebSocket is not connected.");
@@ -182,7 +163,7 @@ export default class MyPlugin extends Plugin {
 						this.ws.send(JSON.stringify({ 
 							type: "req", 
 							id: "ping-" + Date.now(), 
-							method: "health" 
+							method: "ping" 
 						}));
 					}
 				}, 30000);
@@ -206,49 +187,59 @@ export default class MyPlugin extends Plugin {
 			this.ws.onmessage = (event) => {
 				console.log('%c[Gateway 原始消息]', 'background: #222; color: #bada55; font-size: 16px; font-weight: bold;', event.data);
 
-				// Check if it is the connect response
 				try {
 					const parsed = JSON.parse(event.data);
-					if (parsed.type === "res" && parsed.id === "1" && parsed.payload?.protocol) {
-						console.log("Gateway Handshake Accepted!", parsed.result);
-						this.isEstablished = true;
-						new Notice("OpenClaw connected successfully!");
-						return;
-					}
-					// Ignore routine events
-					if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence", "ping"].includes(parsed.event)) return;
-					// Ignore ping responses
-					if (parsed.type === "res" && typeof parsed.id === "string" && parsed.id.startsWith("ping-")) return;
+					const payload = parsed.payload || parsed.result || {};
 
-					// If it is a chat event or message, we want to extract the text
-					let message = "";
-					if (parsed.type === "event" && parsed.event === "chat.message") {
-						message = parsed.payload?.message || "";
-					} else if (parsed.type === "res" && parsed.payload?.message) {
-						message = parsed.payload.message;
-					} else if (parsed.type === "res" && Array.isArray(parsed.payload?.content)) {
-						message = parsed.payload.content.map((c: any) => c.text || "").join("");
-					}
-
-					if (message) {
-						const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAW);
-						if (leaves.length > 0) {
-							const view = leaves[0]?.view as any;
-							const container = view.contentEl.querySelector(".claw-messages");
-							if (container) {
-								const msgEl = document.createElement("div");
-								msgEl.style.marginBottom = "8px";
-								msgEl.style.padding = "8px";
-								msgEl.style.background = "var(--background-secondary)";
-								msgEl.style.borderRadius = "4px";
-								msgEl.innerText = "🐱: " + message;
-								container.appendChild(msgEl);
-								container.scrollTop = container.scrollHeight;
-							}
+					// 1. Handshake
+					if (parsed.type === "res" && parsed.id === "1") {
+						if (parsed.ok && payload.protocol) {
+							console.log("OpenClaw: Handshake Accepted!", payload);
+							this.isEstablished = true;
+							new Notice("OpenClaw connected!");
+						} else {
+							console.error("OpenClaw: Handshake Failed", parsed.error);
+							new Notice("Handshake failed: " + (parsed.error?.message || "unknown error"));
 						}
 						return;
 					}
-				} catch (e) {}
+
+					// 2. Ignore noise
+					if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence", "ping"].includes(parsed.event)) return;
+					if (parsed.type === "res" && typeof parsed.id === "string" && parsed.id.startsWith("ping-")) return;
+
+					// 3. Extract Message
+					let message = "";
+					if (parsed.type === "event") {
+						if (parsed.event === "chat.message") message = payload.message || "";
+						if (parsed.event === "agent" && payload.stream === "assistant" && payload.data?.delta) message = payload.data.delta;
+						if (parsed.event === "chat.delta") message = payload.delta || "";
+					} else if (parsed.type === "res") {
+						if (payload.message) message = payload.message;
+						else if (Array.isArray(payload.content)) {
+							message = payload.content.map((c: any) => c.text || "").join("");
+						}
+					}
+
+					// 4. Write to Editor
+					if (message) {
+						// Priority 1: Use activeEditor (available in newer Obsidian versions)
+						// Priority 2: Use getActiveViewOfType (standard)
+						const editor = (this.app.workspace as any).activeEditor?.editor || 
+									   this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+
+						if (editor) {
+							const cursor = editor.getCursor();
+							editor.replaceRange(message, cursor);
+							const newOffset = editor.posToOffset(cursor) + message.length;
+							editor.setCursor(editor.offsetToPos(newOffset));
+						} else {
+							console.warn("OpenClaw: No active Markdown editor found to write the message.");
+						}
+					}
+				} catch (e) {
+					console.error("OpenClaw: Message processing error", e);
+				}
 			};
 		} catch (e) {
 			console.error('OpenClaw Claw: Failed to connect WebSocket', e);
