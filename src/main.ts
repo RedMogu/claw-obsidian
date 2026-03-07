@@ -136,17 +136,20 @@ export default class MyPlugin extends Plugin {
 				
 				// Send proper OpenClaw Connect Request
 				this.ws?.send(JSON.stringify({
-					type: "request",
+					type: "req",
 					id: "1",
 					method: "connect",
 					params: {
-						minProtocol: 1,
-						maxProtocol: 1,
+						minProtocol: 3,
+						maxProtocol: 3,
 						client: {
-							id: "webchat",
+							id: "webchat-ui",
 							version: "1.0",
 							platform: "browser",
-							mode: "webchat"
+							mode: "ui"
+						},
+						auth: {
+							token: this.settings.authToken
 						}
 					}
 				}));
