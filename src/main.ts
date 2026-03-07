@@ -36,6 +36,13 @@ export class ClawView extends ItemView {
         chatBox.style.gap = "10px";
         chatBox.style.height = "100%";
 
+        const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
+        messagesContainer.style.flexGrow = "2";
+        messagesContainer.style.overflowY = "auto";
+        messagesContainer.style.border = "1px solid var(--background-modifier-border)";
+        messagesContainer.style.padding = "10px";
+        messagesContainer.style.borderRadius = "4px";
+
         const textarea = chatBox.createEl("textarea", {
             placeholder: "Type a message..."
         });
@@ -71,6 +78,31 @@ export class ClawView extends ItemView {
                 console.log('%c[发送到 Gateway]', 'background: #222; color: #f39c12; font-size: 16px; font-weight: bold;', payload);
                 this.plugin.ws.send(JSON.stringify(payload));
                 new Notice("Message sent!");
+                // SIDEBAR: Append user message
+                const container = this.contentEl.querySelector(".claw-messages");
+                if (container) {
+                    const msgEl = document.createElement("div");
+                    msgEl.style.marginBottom = "8px";
+                    msgEl.style.padding = "8px";
+                    msgEl.style.background = "var(--interactive-accent)";
+                    msgEl.style.color = "var(--text-on-accent)";
+                    msgEl.style.borderRadius = "4px";
+                    msgEl.innerText = "You: " + text;
+                    container.appendChild(msgEl);
+                    container.scrollTop = container.scrollHeight;
+                }
+
+                // DOCUMENT: Append user message
+                const editor = (this.plugin.app.workspace as any).activeEditor?.editor || 
+                               this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+                if (editor) {
+                    const cursor = editor.getCursor();
+                    const docText = "\n\n**You:** " + text + "\n\n";
+                    editor.replaceRange(docText, cursor);
+                    const newOffset = editor.posToOffset(cursor) + docText.length;
+                    editor.setCursor(editor.offsetToPos(newOffset));
+                }
+
                 textarea.value = "";
             } else {
                 new Notice("WebSocket is not connected.");
@@ -232,18 +264,46 @@ export default class MyPlugin extends Plugin {
 
 					// 4. Write to Editor
 					if (message) {
-						// Priority 1: Use activeEditor (available in newer Obsidian versions)
-						// Priority 2: Use getActiveViewOfType (standard)
+						// 1. UPDATE SIDEBAR
+						const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAW);
+						if (leaves.length > 0) {
+							const view = leaves[0]?.view as any;
+							const container = view.contentEl.querySelector(".claw-messages");
+							if (container) {
+								let lastMsg = container.lastElementChild;
+								if (!lastMsg || !lastMsg.classList.contains("claw-ai-message")) {
+									lastMsg = document.createElement("div");
+									lastMsg.classList.add("claw-ai-message");
+									lastMsg.style.marginBottom = "8px";
+									lastMsg.style.padding = "8px";
+									lastMsg.style.background = "var(--background-secondary)";
+									lastMsg.style.borderRadius = "4px";
+									lastMsg.style.whiteSpace = "pre-wrap"; 
+									lastMsg.innerText = "🐱: " + message;
+									container.appendChild(lastMsg);
+								} else {
+									lastMsg.innerText += message;
+								}
+								container.scrollTop = container.scrollHeight;
+							}
+						}
+
+						// 2. UPDATE DOCUMENT
 						const editor = (this.app.workspace as any).activeEditor?.editor || 
 									   this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
-
 						if (editor) {
 							const cursor = editor.getCursor();
-							editor.replaceRange(message, cursor);
-							const newOffset = editor.posToOffset(cursor) + message.length;
-							editor.setCursor(editor.offsetToPos(newOffset));
-						} else {
-							console.warn("OpenClaw: No active Markdown editor found to write the message.");
+							if (!this._docStreaming) {
+								this._docStreaming = true;
+								const prefix = "**🐱:** " + message;
+								editor.replaceRange(prefix, cursor);
+								const newOffset = editor.posToOffset(cursor) + prefix.length;
+								editor.setCursor(editor.offsetToPos(newOffset));
+							} else {
+								editor.replaceRange(message, cursor);
+								const newOffset = editor.posToOffset(cursor) + message.length;
+								editor.setCursor(editor.offsetToPos(newOffset));
+							}
 						}
 					}
 				} catch (e) {
