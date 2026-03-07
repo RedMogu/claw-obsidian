@@ -71,7 +71,7 @@ export class ClawView extends ItemView {
                     method: "chat.send",
                     params: {
                         message: text,
-                        sessionKey: "agent:main:obsidian",
+                        sessionKey: this.plugin.settings.sessionKey || "agent:main:obsidian",
                         idempotencyKey: Date.now().toString()
                     }
                 };
@@ -253,7 +253,8 @@ export default class MyPlugin extends Plugin {
 					let message = "";
 					
                     // **CRITICAL FIX**: Only process messages intended for this specific session!
-                    if (parsed.type === "event" && parsed.payload?.sessionKey && parsed.payload.sessionKey !== "agent:main:obsidian") {
+                    const expectedKey = this.settings.sessionKey || "agent:main:obsidian";
+					if (parsed.type === "event" && parsed.payload?.sessionKey && parsed.payload.sessionKey !== expectedKey) {
                         return; // Ignore events from other sessions (like WhatsApp)
                     }
 

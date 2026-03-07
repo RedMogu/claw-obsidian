@@ -2,6 +2,7 @@ import {App, PluginSettingTab, Setting} from "obsidian";
 import MyPlugin from "./main";
 
 export interface MyPluginSettings {
+	sessionKey: string;
 	mySetting: string;
 	gatewayUrl: string;
 	authToken: string;
@@ -10,7 +11,8 @@ export interface MyPluginSettings {
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default',
 	gatewayUrl: 'ws://100.93.80.61:18789',
-	authToken: ''
+	authToken: '',
+	sessionKey: 'agent:main:obsidian'
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -27,15 +29,17 @@ export class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
+			.setName('Session Key')
+			.setDesc('Identifier for isolating this conversation from other clients (e.g. WhatsApp)')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('agent:main:obsidian')
+				.setValue(this.plugin.settings.sessionKey)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.sessionKey = value || 'agent:main:obsidian';
 					await this.plugin.saveSettings();
 				}));
+
+		
 
 		new Setting(containerEl)
 			.setName('Gateway URL')
