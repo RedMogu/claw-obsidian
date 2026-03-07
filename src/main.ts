@@ -133,6 +133,24 @@ export default class MyPlugin extends Plugin {
 			this.ws.onopen = () => {
 				this.isEstablished = false;
 				console.log(`OpenClaw Claw: Successfully connected to ${this.settings.gatewayUrl}`);
+				
+				// Send proper OpenClaw Connect Request
+				this.ws?.send(JSON.stringify({
+					type: "request",
+					id: "1",
+					method: "connect",
+					params: {
+						minProtocol: 1,
+						maxProtocol: 1,
+						client: {
+							id: "webchat",
+							version: "1.0",
+							platform: "browser",
+							mode: "webchat"
+						}
+					}
+				}));
+
 				// Start heartbeat
 				this.pingInterval = window.setInterval(() => {
 					if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -158,25 +176,17 @@ export default class MyPlugin extends Plugin {
 			};
 			this.ws.onmessage = (event) => {
 				console.log('%c[Gateway 原始消息]', 'background: #222; color: #bada55; font-size: 16px; font-weight: bold;', event.data);
-				new Notice(`[Gateway Raw]: ${String(event.data).substring(0, 100)}`);
 
+				// Check if it is the connect response
 				try {
 					const parsed = JSON.parse(event.data);
-					if (parsed.type === "event" && parsed.event === "connect.challenge") {
-						const nonce = parsed.payload?.nonce || parsed.nonce;
-						console.log("收到 connect.challenge，发送 connect.reply 握手包", nonce);
-						// Try matching OpenClaw Gateway strict schema
-						this.ws?.send(JSON.stringify({
-							type: "action",
-							action: "connect.reply",
-							payload: { nonce: nonce }
-						}));
-						setTimeout(() => {
-							this.isEstablished = true;
-						}, 500);
+					if (parsed.type === "response" && parsed.id === "1" && parsed.result?.protocol) {
+						console.log("Gateway Handshake Accepted!", parsed.result);
+						this.isEstablished = true;
+						new Notice("OpenClaw connected successfully!");
 						return;
 					}
-				} catch (err) {}
+				} catch (e) {}
 
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView) {
