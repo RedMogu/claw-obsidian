@@ -74,40 +74,13 @@ export class MoltView extends ItemView {
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	ws: WebSocket | null = null;
+	pingInterval: number | null = null;
+	reconnectTimeout: number | null = null;
 
 	async onload() {
 		await this.loadSettings();
 
-		// OpenClaw Molt WebSocket Connection
-		try {
-			let wsUrl = this.settings.gatewayUrl;
-			if (this.settings.authToken) {
-				wsUrl += "?token=" + this.settings.authToken;
-			}
-			this.ws = new WebSocket(wsUrl);
-			this.ws.onopen = () => {
-				console.log(`OpenClaw Molt: Successfully connected to ${this.settings.gatewayUrl}`);
-			};
-			this.ws.onerror = (error) => {
-				console.error('OpenClaw Molt: WebSocket error', error);
-			};
-			this.ws.onclose = () => {
-				console.log('OpenClaw Molt: WebSocket connection closed');
-			};
-			this.ws.onmessage = (event) => {
-				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (activeView) {
-					const editor = activeView.editor;
-					const cursor = editor.getCursor();
-					const message = String(event.data);
-					editor.replaceRange(message, cursor);
-					const newOffset = editor.posToOffset(cursor) + message.length;
-					editor.setCursor(editor.offsetToPos(newOffset));
-				}
-			};
-		} catch (e) {
-			console.error('OpenClaw Molt: Failed to connect WebSocket', e);
-		}
+		this.connectWebSocket();
 
 		this.registerView(
 			VIEW_TYPE_MOLT,
@@ -127,6 +100,66 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
+	}
+
+	connectWebSocket() {
+		// Clean up existing timers
+		if (this.pingInterval) {
+			clearInterval(this.pingInterval);
+			this.pingInterval = null;
+		}
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
+
+		try {
+			let wsUrl = this.settings.gatewayUrl;
+			if (this.settings.authToken) {
+				wsUrl += "?token=" + this.settings.authToken;
+			}
+			this.ws = new WebSocket(wsUrl);
+			this.ws.onopen = () => {
+				console.log(`OpenClaw Molt: Successfully connected to ${this.settings.gatewayUrl}`);
+				// Start heartbeat
+				this.pingInterval = window.setInterval(() => {
+					if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+						this.ws.send(JSON.stringify({ type: "ping" }));
+					}
+				}, 30000);
+			};
+			this.ws.onerror = (error) => {
+				console.error('OpenClaw Molt: WebSocket error', error);
+			};
+			this.ws.onclose = () => {
+				console.log('OpenClaw Molt: WebSocket connection closed');
+				if (this.pingInterval) {
+					clearInterval(this.pingInterval);
+					this.pingInterval = null;
+				}
+				// Reconnect logic
+				console.log('OpenClaw Molt: Reconnecting in 3 seconds...');
+				this.reconnectTimeout = window.setTimeout(() => {
+					this.connectWebSocket();
+				}, 3000);
+			};
+			this.ws.onmessage = (event) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView) {
+					const editor = activeView.editor;
+					const cursor = editor.getCursor();
+					const message = String(event.data);
+					editor.replaceRange(message, cursor);
+					const newOffset = editor.posToOffset(cursor) + message.length;
+					editor.setCursor(editor.offsetToPos(newOffset));
+				}
+			};
+		} catch (e) {
+			console.error('OpenClaw Molt: Failed to connect WebSocket', e);
+			this.reconnectTimeout = window.setTimeout(() => {
+				this.connectWebSocket();
+			}, 3000);
+		}
 	}
 
 	async activateView() {
@@ -150,7 +183,14 @@ export default class MyPlugin extends Plugin {
 	}
 
 	onunload() {
+		if (this.pingInterval) {
+			clearInterval(this.pingInterval);
+		}
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+		}
 		if (this.ws) {
+			this.ws.onclose = null; // Prevent reconnect loop
 			this.ws.close();
 		}
 	}
