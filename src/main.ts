@@ -59,10 +59,13 @@ export class ClawView extends ItemView {
                     return;
                 }
                 const payload = {
-                    type: "event",
-                    event: "chat",
-                    payload: {
-                        text: text
+                    type: "req",
+                    id: Date.now().toString(),
+                    method: "chat.send",
+                    params: {
+                        message: text,
+                        sessionKey: "agent:main:main",
+                        idempotencyKey: Date.now().toString()
                     }
                 };
                 console.log('%c[发送到 Gateway]', 'background: #222; color: #f39c12; font-size: 16px; font-weight: bold;', payload);
@@ -142,11 +145,12 @@ export default class MyPlugin extends Plugin {
 						minProtocol: 3,
 						maxProtocol: 3,
 						client: {
-							id: "webchat-ui",
+							id: "openclaw-control-ui",
 							version: "1.0",
 							platform: "browser",
-							mode: "ui"
+							mode: "webchat"
 						},
+						scopes: ["operator.write"],
 						auth: {
 							token: this.settings.authToken
 						}
