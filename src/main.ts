@@ -196,7 +196,7 @@ export default class MyPlugin extends Plugin {
 						this.ws.send(JSON.stringify({ 
 							type: "req", 
 							id: "ping-" + Date.now(), 
-							method: "ping" 
+							method: "health" 
 						}));
 					}
 				}, 30000);
