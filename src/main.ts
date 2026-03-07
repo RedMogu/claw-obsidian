@@ -183,13 +183,16 @@ export default class MyPlugin extends Plugin {
 				// Check if it is the connect response
 				try {
 					const parsed = JSON.parse(event.data);
-					if (parsed.type === "response" && parsed.id === "1" && parsed.result?.protocol) {
-						console.log("Gateway Handshake Accepted!", parsed.result);
-						this.isEstablished = true;
-						new Notice("OpenClaw connected successfully!");
-						return;
-					}
-				} catch (e) {}
+					if (parsed.type === "res" && parsed.id === "1" && parsed.payload?.protocol) {
+						console.log("Gateway Handshake Accepted!", parsed.payload);
+							this.isEstablished = true;
+							new Notice("OpenClaw connected successfully!");
+							return;
+						}
+						if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence"].includes(parsed.event)) return;
+					} catch (e) {}
+
+					if (!this.isEstablished) return;
 
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView) {
