@@ -90,6 +90,17 @@ export default class MyPlugin extends Plugin {
 			this.ws.onclose = () => {
 				console.log('OpenClaw Molt: WebSocket connection closed');
 			};
+			this.ws.onmessage = (event) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView) {
+					const editor = activeView.editor;
+					const cursor = editor.getCursor();
+					const message = String(event.data);
+					editor.replaceRange(message, cursor);
+					const newOffset = editor.posToOffset(cursor) + message.length;
+					editor.setCursor(editor.offsetToPos(newOffset));
+				}
+			};
 		} catch (e) {
 			console.error('OpenClaw Molt: Failed to connect WebSocket', e);
 		}
