@@ -100,7 +100,7 @@ export class ClawView extends ItemView {
                 }
                 if (editor) {
                     const cursor = editor.getCursor();
-                    const docText = "\n\n**You:** " + text + "\n\n";
+                    const now = new Date(); const pad = (n: number) => n.toString().padStart(2, '0'); const timestamp = now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate()) + ' ' + pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes()) + ' UTC'; const docText = "\n> **[主人]**: " + text + " (" + timestamp + ")\n> \n";
                     editor.replaceRange(docText, cursor);
                     const newOffset = editor.posToOffset(cursor) + docText.length;
                     editor.setCursor(editor.offsetToPos(newOffset));
@@ -328,13 +328,14 @@ export default class MyPlugin extends Plugin {
 							const cursor = editor.getCursor();
 							if (!this._docStreaming) {
 								this._docStreaming = true;
-								const prefix = "**🐱:** " + message;
+								const prefix = "> **[Cat Butler]**: " + message.replace(/\n/g, "\n> ");
 								editor.replaceRange(prefix, cursor);
 								const newOffset = editor.posToOffset(cursor) + prefix.length;
 								editor.setCursor(editor.offsetToPos(newOffset));
 							} else {
-								editor.replaceRange(message, cursor);
-								const newOffset = editor.posToOffset(cursor) + message.length;
+                                const formattedMessage = message.replace(/\n/g, "\n> ");
+								editor.replaceRange(formattedMessage, cursor);
+								const newOffset = editor.posToOffset(cursor) + formattedMessage.length;
 								editor.setCursor(editor.offsetToPos(newOffset));
 							}
 						}
