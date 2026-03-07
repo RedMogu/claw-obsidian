@@ -1,9 +1,9 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin, ItemView, WorkspaceLeaf} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
 
-export const VIEW_TYPE_MOLT = "molt-view";
+export const VIEW_TYPE_CLAW = "claw-view";
 
-export class MoltView extends ItemView {
+export class ClawView extends ItemView {
     plugin: MyPlugin;
 
     constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
@@ -12,11 +12,11 @@ export class MoltView extends ItemView {
     }
 
     getViewType() {
-        return VIEW_TYPE_MOLT;
+        return VIEW_TYPE_CLAW;
     }
 
     getDisplayText() {
-        return "Molt Chat";
+        return "Claw Chat";
     }
 
     getIcon() {
@@ -28,9 +28,9 @@ export class MoltView extends ItemView {
         
         container.empty();
 
-        container.createEl("h4", { text: "Molt Chat" });
+        container.createEl("h4", { text: "Claw Chat" });
 
-        const chatBox = container.createEl("div", { cls: "molt-chat-box" });
+        const chatBox = container.createEl("div", { cls: "claw-chat-box" });
         chatBox.style.display = "flex";
         chatBox.style.flexDirection = "column";
         chatBox.style.gap = "10px";
@@ -54,10 +54,16 @@ export class MoltView extends ItemView {
             }
 
             if (this.plugin.ws && this.plugin.ws.readyState === WebSocket.OPEN) {
-                this.plugin.ws.send(JSON.stringify({
-                    type: "chat",
-                    content: text
-                }));
+                const payload = {
+                    jsonrpc: "2.0",
+                    method: "messages/create",
+                    params: {
+                        content: text
+                    },
+                    id: Date.now()
+                };
+                console.log('%c[发送到 Gateway]', 'background: #222; color: #f39c12; font-size: 16px; font-weight: bold;', payload);
+                this.plugin.ws.send(JSON.stringify(payload));
                 new Notice("Message sent!");
                 textarea.value = "";
             } else {
@@ -83,17 +89,17 @@ export default class MyPlugin extends Plugin {
 		this.connectWebSocket();
 
 		this.registerView(
-			VIEW_TYPE_MOLT,
-			(leaf) => new MoltView(leaf, this)
+			VIEW_TYPE_CLAW,
+			(leaf) => new ClawView(leaf, this)
 		);
 
-		this.addRibbonIcon('message-circle', 'Open Molt Chat', () => {
+		this.addRibbonIcon('message-circle', 'Open Claw Chat', () => {
 			this.activateView();
 		});
 
 		this.addCommand({
-			id: 'open-molt-chat',
-			name: 'Open Molt Chat View',
+			id: 'open-claw-chat',
+			name: 'Open Claw Chat View',
 			callback: () => {
 				this.activateView();
 			}
@@ -120,7 +126,7 @@ export default class MyPlugin extends Plugin {
 			}
 			this.ws = new WebSocket(wsUrl);
 			this.ws.onopen = () => {
-				console.log(`OpenClaw Molt: Successfully connected to ${this.settings.gatewayUrl}`);
+				console.log(`OpenClaw Claw: Successfully connected to ${this.settings.gatewayUrl}`);
 				// Start heartbeat
 				this.pingInterval = window.setInterval(() => {
 					if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -129,21 +135,33 @@ export default class MyPlugin extends Plugin {
 				}, 30000);
 			};
 			this.ws.onerror = (error) => {
-				console.error('OpenClaw Molt: WebSocket error', error);
+				console.error('OpenClaw Claw: WebSocket error', error);
 			};
 			this.ws.onclose = () => {
-				console.log('OpenClaw Molt: WebSocket connection closed');
+				console.log('OpenClaw Claw: WebSocket connection closed');
 				if (this.pingInterval) {
 					clearInterval(this.pingInterval);
 					this.pingInterval = null;
 				}
 				// Reconnect logic
-				console.log('OpenClaw Molt: Reconnecting in 3 seconds...');
+				console.log('OpenClaw Claw: Reconnecting in 3 seconds...');
 				this.reconnectTimeout = window.setTimeout(() => {
 					this.connectWebSocket();
 				}, 3000);
 			};
 			this.ws.onmessage = (event) => {
+				console.log('%c[Gateway 原始消息]', 'background: #222; color: #bada55; font-size: 16px; font-weight: bold;', event.data);
+				new Notice(`[Gateway Raw]: ${String(event.data).substring(0, 100)}`);
+
+				try {
+					const parsed = JSON.parse(event.data);
+					if (parsed.type === "event" && parsed.event === "connect.challenge") {
+						console.log("拦截到 connect.challenge，作为心跳返回/或直接忽略。");
+						// 根据提示如果不需要特别处理就忽略
+						return;
+					}
+				} catch (err) {}
+
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView) {
 					const editor = activeView.editor;
@@ -155,7 +173,7 @@ export default class MyPlugin extends Plugin {
 				}
 			};
 		} catch (e) {
-			console.error('OpenClaw Molt: Failed to connect WebSocket', e);
+			console.error('OpenClaw Claw: Failed to connect WebSocket', e);
 			this.reconnectTimeout = window.setTimeout(() => {
 				this.connectWebSocket();
 			}, 3000);
@@ -166,14 +184,14 @@ export default class MyPlugin extends Plugin {
 		const { workspace } = this.app;
 		
 		let leaf: WorkspaceLeaf | null | undefined = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_MOLT);
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_CLAW);
 
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
 			leaf = workspace.getRightLeaf(false);
             if(leaf) {
-			    await leaf.setViewState({ type: VIEW_TYPE_MOLT, active: true });
+			    await leaf.setViewState({ type: VIEW_TYPE_CLAW, active: true });
             }
 		}
 

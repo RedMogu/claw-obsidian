@@ -1,4 +1,4 @@
-# OpenClaw Molt - Obsidian Native Plugin
+# OpenClaw Claw - Obsidian Native Plugin
 
 This is an Obsidian plugin designed to act as a native client for your [OpenClaw](https://openclaw.ai) Sovereign AI system. 
 
@@ -6,7 +6,7 @@ It completely bypasses traditional file-syncing methods (like iCloud or Google D
 
 ## 🚀 Features
 
-- **Native Sidebar Chat**: Adds a `Molt Chat` view to your Obsidian right sidebar.
+- **Native Sidebar Chat**: Adds a `Claw Chat` view to your Obsidian right sidebar.
 - **Direct WebSocket Link**: Connects directly to your OpenClaw Gateway.
 - **Zero-Sync Latency**: You talk to your AI, and it replies instantly, without waiting for cloud files to sync.
 
@@ -35,8 +35,8 @@ npm run build
 ### 4. Enable and Use
 1. Open Obsidian and go to **Settings > Community plugins**.
 2. If Safe Mode is ON, turn it OFF to allow local plugins.
-3. Scroll down to **Installed plugins** and toggle the switch for **OpenClaw Molt** to ON.
-4. Look at the left ribbon (the vertical toolbar). Click the **Open Molt Chat** icon (message bubble).
+3. Scroll down to **Installed plugins** and toggle the switch for **OpenClaw Claw** to ON.
+4. Look at the left ribbon (the vertical toolbar). Click the **Open Claw Chat** icon (message bubble).
 5. A new chat panel will open in your right sidebar. 
 
 ## 🔧 Configuration (Changing the IP)
