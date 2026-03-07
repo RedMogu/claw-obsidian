@@ -59,12 +59,11 @@ export class ClawView extends ItemView {
                     return;
                 }
                 const payload = {
-                    jsonrpc: "2.0",
-                    method: "messages/create",
-                    params: {
-                        content: text
-                    },
-                    id: Date.now()
+                    type: "event",
+                    event: "chat",
+                    payload: {
+                        text: text
+                    }
                 };
                 console.log('%c[发送到 Gateway]', 'background: #222; color: #f39c12; font-size: 16px; font-weight: bold;', payload);
                 this.plugin.ws.send(JSON.stringify(payload));
@@ -143,10 +142,10 @@ export default class MyPlugin extends Plugin {
 						minProtocol: 3,
 						maxProtocol: 3,
 						client: {
-							id: "gateway-client",
+							id: "webchat-ui",
 							version: "1.0",
 							platform: "browser",
-							mode: "backend"
+							mode: "ui"
 						},
 						auth: {
 							token: this.settings.authToken
