@@ -3,10 +3,12 @@ import MyPlugin from "./main";
 
 export interface MyPluginSettings {
 	mySetting: string;
+	gatewayUrl: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+	mySetting: 'default',
+	gatewayUrl: 'ws://100.93.80.61:18789'
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -30,6 +32,17 @@ export class SampleSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.mySetting)
 				.onChange(async (value) => {
 					this.plugin.settings.mySetting = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Gateway URL')
+			.setDesc('WebSocket URL for OpenClaw Gateway')
+			.addText(text => text
+				.setPlaceholder('ws://100.93.80.61:18789')
+				.setValue(this.plugin.settings.gatewayUrl)
+				.onChange(async (value) => {
+					this.plugin.settings.gatewayUrl = value;
 					await this.plugin.saveSettings();
 				}));
 	}
