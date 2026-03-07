@@ -7,10 +7,12 @@ It completely bypasses traditional file-syncing methods (like iCloud or Google D
 ## 🚀 Features
 
 - **Native Sidebar Chat**: Adds a `Claw Chat` view to your Obsidian right sidebar.
-- **Direct WebSocket Link**: Connects directly to your OpenClaw Gateway.
-- **Zero-Sync Latency**: You talk to your AI, and it replies instantly, without waiting for cloud files to sync.
+- **Smart Dual-Write (v1.0.31+)**: Conversations are rendered beautifully in the sidebar **and** automatically streamed directly into your currently active Markdown document.
+- **Clean Markdown Formatting**: Your AI's responses are injected into your document using a clean, list-friendly horizontal rule (`---`) format.
+- **Direct WebSocket Link**: Connects directly to your OpenClaw Gateway using the `health` protocol for robust keep-alive.
+- **Session Isolation**: Fully isolated chat context via customizable `Session Key` so your notes don't leak into your main WhatsApp/Telegram threads.
 
-## 🛠️ Installation & Setup (Tailscale Environment)
+## 🛠️ Installation & Setup
 
 Since your OpenClaw Gateway is likely running on a remote server (e.g., an Azure VM) and your Obsidian is local (e.g., your Mac), this plugin defaults to connecting via a Tailscale IP.
 
@@ -18,33 +20,38 @@ Since your OpenClaw Gateway is likely running on a remote server (e.g., an Azure
 - You must have [Tailscale](https://tailscale.com/) installed and connected on the machine running Obsidian.
 - Your OpenClaw Gateway must be running and bound to its LAN/Tailscale IP (`gateway.bind: "lan"` in `openclaw.json`).
 
-### 2. Download and Build
-Open your terminal and run:
-```bash
-git clone https://github.com/RedMogu/claw-obsidian.git
-cd claw-obsidian
-npm install
-npm run build
-```
-
-### 3. Install to Obsidian
-1. Copy the built `claw-obsidian` folder into your Obsidian vault's plugin directory:
+### 2. Download and Install
+1. Go to the [Releases](https://github.com/RedMogu/claw-obsidian/releases) page and download the latest `claw-obsidian-vX.X.X.tar.gz`.
+2. Extract the `claw-obsidian` folder into your Obsidian vault's plugin directory:
    `YourVaultName/.obsidian/plugins/`
-2. If the folder `.obsidian` is hidden on your Mac, press `Cmd + Shift + .` in Finder to reveal it.
+3. If the folder `.obsidian` is hidden on your Mac, press `Cmd + Shift + .` in Finder to reveal it.
 
-### 4. Enable and Use
+### 3. Enable and Configure
 1. Open Obsidian and go to **Settings > Community plugins**.
 2. If Safe Mode is ON, turn it OFF to allow local plugins.
 3. Scroll down to **Installed plugins** and toggle the switch for **OpenClaw Claw** to ON.
-4. Look at the left ribbon (the vertical toolbar). Click the **Open Claw Chat** icon (message bubble).
-5. A new chat panel will open in your right sidebar. 
+4. Click the **gear icon** ⚙️ next to the plugin to open its settings:
+   - **Gateway URL**: Set this to your Gateway's WebSocket address (e.g., `ws://100.x.y.z:18789`).
+   - **Gateway Auth Token**: Paste your Gateway access token here.
+   - **Session Key**: Leave as default (`agent:main:obsidian`) to keep your Obsidian chats separate from your other clients.
+5. Look at the left ribbon (the vertical toolbar). Click the **Open Claw Chat** icon (message bubble).
+6. A new chat panel will open in your right sidebar. 
 
-## 🔧 Configuration (Changing the IP)
-By default, the plugin connects to `ws://100.93.80.61:18789`.
-If your OpenClaw Gateway's Tailscale IP changes, you need to update it:
-1. Open `src/main.ts`.
-2. Find the line: `this.ws = new WebSocket('ws://100.93.80.61:18789');`
-3. Change the IP to your Gateway's IP.
-4. Re-run `npm run build` and restart the plugin in Obsidian.
+## 📝 Document Formatting
 
-*(In future updates, this will be movable to the Obsidian Settings UI).*
+When you chat with the AI using the sidebar, the conversation is automatically streamed into the last Markdown document you clicked on. The format looks like this:
+
+```markdown
+---
+**[主人]**: Write me a python script to parse JSON. (2026-03-07 17:40 UTC)
+**[Cat Butler]**: Here is your script:
+(Code block and markdown rendered normally)
+
+---
+```
+
+## 🔄 Recent Updates
+- **v1.0.31**: Changed document insertion format from blockquotes to a cleaner horizontal rule (`---`) separation between conversation turns to prevent Markdown list breakage.
+- **v1.0.28**: Implemented Smart Document Binding. The plugin actively listens for `active-leaf-change` events to remember the last document you worked on.
+- **v1.0.25**: Added UI settings to configure Gateway URL, Auth Token, and Session Key directly within Obsidian.
+- **v1.0.23**: Fixed WebSocket keep-alive connection drops by utilizing the official `health` RPC method.
