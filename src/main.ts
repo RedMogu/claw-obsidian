@@ -84,6 +84,7 @@ export class ClawView extends ItemView {
 }
 
 export default class MyPlugin extends Plugin {
+	_docStreaming: boolean = false;
 	settings: MyPluginSettings;
 	ws: WebSocket | null = null;
 	pingInterval: number | null = null;
@@ -207,6 +208,14 @@ export default class MyPlugin extends Plugin {
 					// 2. Ignore noise
 					if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence", "ping"].includes(parsed.event)) return;
 					if (parsed.type === "res" && typeof parsed.id === "string" && parsed.id.startsWith("ping-")) return;
+
+					// Check if stream ended to reset doc streaming state
+                    if (parsed.type === "event" && parsed.event === "agent" && payload.stream === "assistant" && payload.state === "done") {
+                        this._docStreaming = false;
+                    }
+                    if (parsed.type === "res") {
+                        this._docStreaming = false; // direct response implies one-shot end
+                    }
 
 					// 3. Extract Message
 					let message = "";
