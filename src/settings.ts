@@ -2,6 +2,7 @@ import {App, PluginSettingTab, Setting} from "obsidian";
 import MyPlugin from "./main";
 
 export interface MyPluginSettings {
+	syncToDocument: boolean;
 	sessionKey: string;
 	mySetting: string;
 	gatewayUrl: string;
@@ -9,6 +10,7 @@ export interface MyPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
+	syncToDocument: true,
 	mySetting: 'default',
 	gatewayUrl: 'ws://100.93.80.61:18789',
 	authToken: '',

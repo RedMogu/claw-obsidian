@@ -1,9 +1,9 @@
 {
-  "url": "https://api.github.com/repos/RedMogu/claw-obsidian/releases/294232078",
-  "assets_url": "https://api.github.com/repos/RedMogu/claw-obsidian/releases/294232078/assets",
-  "upload_url": "https://uploads.github.com/repos/RedMogu/claw-obsidian/releases/294232078/assets{?name,label}",
-  "html_url": "https://github.com/RedMogu/claw-obsidian/releases/tag/v1.0.1",
-  "id": 294232078,
+  "url": "https://api.github.com/repos/RedMogu/claw-obsidian/releases/294260305",
+  "assets_url": "https://api.github.com/repos/RedMogu/claw-obsidian/releases/294260305/assets",
+  "upload_url": "https://uploads.github.com/repos/RedMogu/claw-obsidian/releases/294260305/assets{?name,label}",
+  "html_url": "https://github.com/RedMogu/claw-obsidian/releases/tag/v1.0.12",
+  "id": 294260305,
   "author": {
     "login": "JesseXie",
     "id": 5066661,
@@ -25,20 +25,20 @@
     "user_view_type": "public",
     "site_admin": false
   },
-  "node_id": "RE_kwDORgrz1s4RiaAO",
-  "tag_name": "v1.0.1",
+  "node_id": "RE_kwDORgrz1s4Rig5R",
+  "tag_name": "v1.0.12",
   "target_commitish": "main",
-  "name": "v1.0.1 (Auth Update)",
+  "name": "v1.0.12 (Correct Chat Format)",
   "draft": false,
   "immutable": false,
   "prerelease": false,
-  "created_at": "2026-03-07T11:22:10Z",
-  "updated_at": "2026-03-07T11:23:50Z",
-  "published_at": "2026-03-07T11:23:50Z",
+  "created_at": "2026-03-07T15:28:14Z",
+  "updated_at": "2026-03-07T15:28:25Z",
+  "published_at": "2026-03-07T15:28:25Z",
   "assets": [
 
   ],
-  "tarball_url": "https://api.github.com/repos/RedMogu/claw-obsidian/tarball/v1.0.1",
-  "zipball_url": "https://api.github.com/repos/RedMogu/claw-obsidian/zipball/v1.0.1",
-  "body": "Hotfix for OpenClaw Claw for Obsidian.\n\n- Added `Auth Token` field in plugin settings.\n- Fixed WebSocket connection rejected due to missing auth mode.\n- Enhanced response injection precision."
+  "tarball_url": "https://api.github.com/repos/RedMogu/claw-obsidian/tarball/v1.0.12",
+  "zipball_url": "https://api.github.com/repos/RedMogu/claw-obsidian/zipball/v1.0.12",
+  "body": "Fixed invalid request frame error when sending messages.\n\n- Reverted to standard `webchat-ui` connection to fully support Gateway Event mode.\n- Changed message dispatch from `jsonrpc` to OpenClaw `chat` event protocol."
 }
