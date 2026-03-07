@@ -64,7 +64,7 @@ export class ClawView extends ItemView {
                     method: "chat.send",
                     params: {
                         message: text,
-                        sessionKey: "agent:main:main",
+                        sessionKey: "agent:main:obsidian",
                         idempotencyKey: Date.now().toString()
                     }
                 };
