@@ -54,6 +54,10 @@ export class ClawView extends ItemView {
             }
 
             if (this.plugin.ws && this.plugin.ws.readyState === WebSocket.OPEN) {
+                if (!this.plugin.isEstablished) {
+                    new Notice("WebSocket is connecting (handshake pending), please wait.");
+                    return;
+                }
                 const payload = {
                     jsonrpc: "2.0",
                     method: "messages/create",
@@ -82,6 +86,7 @@ export default class MyPlugin extends Plugin {
 	ws: WebSocket | null = null;
 	pingInterval: number | null = null;
 	reconnectTimeout: number | null = null;
+	isEstablished: boolean = false;
 
 	async onload() {
 		await this.loadSettings();
@@ -126,6 +131,7 @@ export default class MyPlugin extends Plugin {
 			}
 			this.ws = new WebSocket(wsUrl);
 			this.ws.onopen = () => {
+				this.isEstablished = false;
 				console.log(`OpenClaw Claw: Successfully connected to ${this.settings.gatewayUrl}`);
 				// Start heartbeat
 				this.pingInterval = window.setInterval(() => {
@@ -138,6 +144,7 @@ export default class MyPlugin extends Plugin {
 				console.error('OpenClaw Claw: WebSocket error', error);
 			};
 			this.ws.onclose = () => {
+				this.isEstablished = false;
 				console.log('OpenClaw Claw: WebSocket connection closed');
 				if (this.pingInterval) {
 					clearInterval(this.pingInterval);
@@ -156,8 +163,14 @@ export default class MyPlugin extends Plugin {
 				try {
 					const parsed = JSON.parse(event.data);
 					if (parsed.type === "event" && parsed.event === "connect.challenge") {
-						console.log("拦截到 connect.challenge，作为心跳返回/或直接忽略。");
-						// 根据提示如果不需要特别处理就忽略
+						const nonce = parsed.payload?.nonce || parsed.nonce;
+						console.log("收到 connect.challenge，发送 connect.reply 握手包", nonce);
+						this.ws?.send(JSON.stringify({
+							action: "connect.reply",
+							event: "connect.reply",
+							payload: { nonce: nonce }
+						}));
+						setTimeout(() => { this.isEstablished = true; }, 500);
 						return;
 					}
 				} catch (err) {}
