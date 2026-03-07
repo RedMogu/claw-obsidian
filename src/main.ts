@@ -199,7 +199,7 @@ export default class MyPlugin extends Plugin {
 					// Ignore routine events
 					if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence", "ping"].includes(parsed.event)) return;
 					// Ignore ping responses
-					if (parsed.type === "res" && parsed.id?.startsWith("ping-")) return;
+					if (parsed.type === "res" && typeof parsed.id === "string" && parsed.id.startsWith("ping-")) return;
 
 					// If it is a chat event or message, we want to extract the text
 					let message = "";
