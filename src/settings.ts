@@ -4,11 +4,13 @@ import MyPlugin from "./main";
 export interface MyPluginSettings {
 	mySetting: string;
 	gatewayUrl: string;
+	authToken: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default',
-	gatewayUrl: 'ws://100.93.80.61:18789'
+	gatewayUrl: 'ws://100.93.80.61:18789',
+	authToken: ''
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -43,6 +45,17 @@ export class SampleSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.gatewayUrl)
 				.onChange(async (value) => {
 					this.plugin.settings.gatewayUrl = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Gateway Auth Token')
+			.setDesc('Token for authenticating with OpenClaw Gateway')
+			.addText(text => text
+				.setPlaceholder('Enter auth token')
+				.setValue(this.plugin.settings.authToken)
+				.onChange(async (value) => {
+					this.plugin.settings.authToken = value;
 					await this.plugin.saveSettings();
 				}));
 	}

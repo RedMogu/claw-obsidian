@@ -80,7 +80,11 @@ export default class MyPlugin extends Plugin {
 
 		// OpenClaw Molt WebSocket Connection
 		try {
-			this.ws = new WebSocket(this.settings.gatewayUrl);
+			let wsUrl = this.settings.gatewayUrl;
+			if (this.settings.authToken) {
+				wsUrl += "?token=" + this.settings.authToken;
+			}
+			this.ws = new WebSocket(wsUrl);
 			this.ws.onopen = () => {
 				console.log(`OpenClaw Molt: Successfully connected to ${this.settings.gatewayUrl}`);
 			};
