@@ -244,6 +244,15 @@ export default class MyPlugin extends Plugin {
 					// Check if stream ended to reset doc streaming state
                     if (parsed.type === "event" && parsed.event === "agent" && payload.stream === "assistant" && payload.state === "done") {
                         this._docStreaming = false;
+                        // Add trailing newline to document after AI is done
+                        const editor = (this.app.workspace as any).activeEditor?.editor || 
+                                       this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+                        if (editor) {
+                            const cursor = editor.getCursor();
+                            editor.replaceRange("\n\n", cursor);
+                            const newOffset = editor.posToOffset(cursor) + 2;
+                            editor.setCursor(editor.offsetToPos(newOffset));
+                        }
                     }
                     if (parsed.type === "res") {
                         this._docStreaming = false; // direct response implies one-shot end
