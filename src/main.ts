@@ -80,9 +80,9 @@ export default class MyPlugin extends Plugin {
 
 		// OpenClaw Molt WebSocket Connection
 		try {
-			this.ws = new WebSocket('ws://127.0.0.1:18789');
+			this.ws = new WebSocket('ws://100.93.80.61:18789');
 			this.ws.onopen = () => {
-				console.log('OpenClaw Molt: Successfully connected to ws://127.0.0.1:18789');
+				console.log('OpenClaw Molt: Successfully connected to ws://100.93.80.61:18789');
 			};
 			this.ws.onerror = (error) => {
 				console.error('OpenClaw Molt: WebSocket error', error);
