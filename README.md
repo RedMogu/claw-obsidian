@@ -55,3 +55,10 @@ When you chat with the AI using the sidebar, the conversation is automatically s
 - **v1.0.28**: Implemented Smart Document Binding. The plugin actively listens for `active-leaf-change` events to remember the last document you worked on.
 - **v1.0.25**: Added UI settings to configure Gateway URL, Auth Token, and Session Key directly within Obsidian.
 - **v1.0.23**: Fixed WebSocket keep-alive connection drops by utilizing the official `health` RPC method.
+
+## 🐛 Troubleshooting & Known Gotchas (Developer Notes)
+If you ever plan to modify this plugin, here are a few pitfalls we ran into during development:
+1. **WebSocket Handshake & JSON-RPC**: OpenClaw Gateway expects strict JSON-RPC for requests. You **must** send `{ type: "req", method: "chat.send", ... }`. Sending `{ type: "event" }` from a client will cause the Gateway to immediately reject the payload.
+2. **Keep-Alive (Heartbeat)**: The Gateway does not have a generic `ping` method. To keep the WebSocket alive, you must poll the `health` method every ~30 seconds.
+3. **Session Leakage**: Gateway broadcasts \`agent\` and \`chat.message\` events to all connected clients. If you don't explicitly filter by \`sessionKey\` in your `onmessage` handler, your Obsidian plugin will print replies meant for your WhatsApp or Telegram bots!
+4. **Obsidian Active View Focus**: When a user clicks the input box inside your custom sidebar view, the main Markdown editor **loses focus**. \`app.workspace.getActiveViewOfType(MarkdownView)\` will return \`null\`. The solution is to listen to \`active-leaf-change\` globally and cache the last known Markdown editor to ensure "Dual-Write" always finds a target document.
