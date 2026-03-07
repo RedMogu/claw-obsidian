@@ -160,7 +160,11 @@ export default class MyPlugin extends Plugin {
 				// Start heartbeat
 				this.pingInterval = window.setInterval(() => {
 					if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-						this.ws.send(JSON.stringify({ type: "ping" }));
+						this.ws.send(JSON.stringify({ 
+							type: "req", 
+							id: "ping-" + Date.now(), 
+							method: "ping" 
+						}));
 					}
 				}, 30000);
 			};
@@ -187,25 +191,38 @@ export default class MyPlugin extends Plugin {
 				try {
 					const parsed = JSON.parse(event.data);
 					if (parsed.type === "res" && parsed.id === "1" && parsed.payload?.protocol) {
-						console.log("Gateway Handshake Accepted!", parsed.payload);
-							this.isEstablished = true;
-							new Notice("OpenClaw connected successfully!");
-							return;
+						console.log("Gateway Handshake Accepted!", parsed.result);
+						this.isEstablished = true;
+						new Notice("OpenClaw connected successfully!");
+						return;
+					}
+					// Ignore routine events
+					if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence", "ping"].includes(parsed.event)) return;
+					// Ignore ping responses
+					if (parsed.type === "res" && parsed.id?.startsWith("ping-")) return;
+
+					// If it is a chat event or message, we want to extract the text
+					let message = "";
+					if (parsed.type === "event" && parsed.event === "chat.message") {
+						message = parsed.payload?.message || "";
+					} else if (parsed.type === "res" && parsed.payload?.message) {
+						message = parsed.payload.message;
+					} else if (parsed.type === "res" && Array.isArray(parsed.payload?.content)) {
+						message = parsed.payload.content.map((c: any) => c.text || "").join("");
+					}
+
+					if (message) {
+						const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+						if (activeView) {
+							const editor = activeView.editor;
+							const cursor = editor.getCursor();
+							editor.replaceRange(message, cursor);
+							const newOffset = editor.posToOffset(cursor) + message.length;
+							editor.setCursor(editor.offsetToPos(newOffset));
 						}
-						if (parsed.type === "event" && ["connect.challenge", "tick", "health", "presence"].includes(parsed.event)) return;
-					} catch (e) {}
-
-					if (!this.isEstablished) return;
-
-				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (activeView) {
-					const editor = activeView.editor;
-					const cursor = editor.getCursor();
-					const message = String(event.data);
-					editor.replaceRange(message, cursor);
-					const newOffset = editor.posToOffset(cursor) + message.length;
-					editor.setCursor(editor.offsetToPos(newOffset));
-				}
+						return;
+					}
+				} catch (e) {}
 			};
 		} catch (e) {
 			console.error('OpenClaw Claw: Failed to connect WebSocket', e);
