@@ -93,8 +93,11 @@ export class ClawView extends ItemView {
                 }
 
                 // DOCUMENT: Append user message
-                const editor = (this.plugin.app.workspace as any).activeEditor?.editor || 
-                               this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+                let editor = this.plugin.lastActiveEditor;
+                if (!editor) {
+                    const mdLeaves = this.plugin.app.workspace.getLeavesOfType("markdown");
+                    if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
+                }
                 if (editor) {
                     const cursor = editor.getCursor();
                     const docText = "\n\n**You:** " + text + "\n\n";
@@ -117,6 +120,7 @@ export class ClawView extends ItemView {
 
 export default class MyPlugin extends Plugin {
 	_docStreaming: boolean = false;
+	lastActiveEditor: Editor | null = null;
 	settings: MyPluginSettings;
 	ws: WebSocket | null = null;
 	pingInterval: number | null = null;
@@ -124,6 +128,13 @@ export default class MyPlugin extends Plugin {
 	isEstablished: boolean = false;
 
 	async onload() {
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				if (leaf?.view instanceof MarkdownView) {
+					this.lastActiveEditor = leaf.view.editor;
+				}
+			})
+		);
 		await this.loadSettings();
 
 		this.connectWebSocket();
@@ -245,8 +256,11 @@ export default class MyPlugin extends Plugin {
                     if (parsed.type === "event" && parsed.event === "agent" && payload.stream === "assistant" && payload.state === "done") {
                         this._docStreaming = false;
                         // Add trailing newline to document after AI is done
-                        const editor = (this.app.workspace as any).activeEditor?.editor || 
-                                       this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+                        let editor = this.lastActiveEditor;
+						if (!editor) {
+							const mdLeaves = this.app.workspace.getLeavesOfType("markdown");
+							if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
+						}
                         if (editor) {
                             const cursor = editor.getCursor();
                             editor.replaceRange("\n\n", cursor);
@@ -305,8 +319,11 @@ export default class MyPlugin extends Plugin {
 						}
 
 						// 2. UPDATE DOCUMENT
-						const editor = (this.app.workspace as any).activeEditor?.editor || 
-									   this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+						let editor = this.lastActiveEditor;
+						if (!editor) {
+							const mdLeaves = this.app.workspace.getLeavesOfType("markdown");
+							if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
+						}
 						if (editor) {
 							const cursor = editor.getCursor();
 							if (!this._docStreaming) {
