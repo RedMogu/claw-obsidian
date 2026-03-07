@@ -21,14 +21,14 @@ Since your OpenClaw Gateway is likely running on a remote server (e.g., an Azure
 ### 2. Download and Build
 Open your terminal and run:
 ```bash
-git clone https://github.com/RedMogu/molt-obsidian.git
-cd molt-obsidian
+git clone https://github.com/RedMogu/claw-obsidian.git
+cd claw-obsidian
 npm install
 npm run build
 ```
 
 ### 3. Install to Obsidian
-1. Copy the built `molt-obsidian` folder into your Obsidian vault's plugin directory:
+1. Copy the built `claw-obsidian` folder into your Obsidian vault's plugin directory:
    `YourVaultName/.obsidian/plugins/`
 2. If the folder `.obsidian` is hidden on your Mac, press `Cmd + Shift + .` in Finder to reveal it.
 
