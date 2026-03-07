@@ -100,7 +100,7 @@ export class ClawView extends ItemView {
                 }
                 if (editor) {
                     const cursor = editor.getCursor();
-                    const now = new Date(); const pad = (n: number) => n.toString().padStart(2, '0'); const timestamp = now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate()) + ' ' + pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes()) + ' UTC'; const docText = "\n> **[主人]**: " + text + " (" + timestamp + ")\n> \n";
+                    const now = new Date(); const pad = (n: number) => n.toString().padStart(2, '0'); const timestamp = now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate()) + ' ' + pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes()) + ' UTC'; const docText = "\n\n---\n**[主人]**: " + text + " (" + timestamp + ")\n";
                     editor.replaceRange(docText, cursor);
                     const newOffset = editor.posToOffset(cursor) + docText.length;
                     editor.setCursor(editor.offsetToPos(newOffset));
@@ -263,8 +263,8 @@ export default class MyPlugin extends Plugin {
 						}
                         if (editor) {
                             const cursor = editor.getCursor();
-                            editor.replaceRange("\n> \n\n", cursor);
-                            const newOffset = editor.posToOffset(cursor) + 4;
+                            editor.replaceRange("\n\n", cursor);
+                            const newOffset = editor.posToOffset(cursor) + 2;
                             editor.setCursor(editor.offsetToPos(newOffset));
                         }
                     }
@@ -328,14 +328,13 @@ export default class MyPlugin extends Plugin {
 							const cursor = editor.getCursor();
 							if (!this._docStreaming) {
 								this._docStreaming = true;
-								const prefix = "> **[Cat Butler]**: " + message.replace(/\n/g, "\n> ");
+								const prefix = "**[Cat Butler]**: " + message;
 								editor.replaceRange(prefix, cursor);
 								const newOffset = editor.posToOffset(cursor) + prefix.length;
 								editor.setCursor(editor.offsetToPos(newOffset));
 							} else {
-                                const formattedMessage = message.replace(/\n/g, "\n> ");
-								editor.replaceRange(formattedMessage, cursor);
-								const newOffset = editor.posToOffset(cursor) + formattedMessage.length;
+								editor.replaceRange(message, cursor);
+								const newOffset = editor.posToOffset(cursor) + message.length;
 								editor.setCursor(editor.offsetToPos(newOffset));
 							}
 						}
