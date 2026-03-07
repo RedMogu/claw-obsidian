@@ -1,7 +1,7 @@
 {
 	"id": "claw-obsidian",
 	"name": "OpenClaw Claw",
-	"version": "1.0.29",
+	"version": "1.0.30",
 	"minAppVersion": "0.15.0",
 	"description": "Demonstrates some of the capabilities of the Obsidian API.",
 	"author": "Obsidian",

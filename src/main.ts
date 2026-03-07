@@ -263,8 +263,8 @@ export default class MyPlugin extends Plugin {
 						}
                         if (editor) {
                             const cursor = editor.getCursor();
-                            editor.replaceRange("\n\n", cursor);
-                            const newOffset = editor.posToOffset(cursor) + 2;
+                            editor.replaceRange("\n> \n\n", cursor);
+                            const newOffset = editor.posToOffset(cursor) + 4;
                             editor.setCursor(editor.offsetToPos(newOffset));
                         }
                     }
