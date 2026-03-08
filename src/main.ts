@@ -232,7 +232,6 @@ export default class MyPlugin extends Plugin {
 							platform: "browser",
 							mode: "webchat"
 						},
-						scopes: ["operator.write"],
 						auth: {
 							token: this.settings.authToken
 						}
