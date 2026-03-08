@@ -37,6 +37,24 @@ Since your OpenClaw Gateway is likely running on a remote server (e.g., an Azure
 5. Look at the left ribbon (the vertical toolbar). Click the **Open Claw Chat** icon (message bubble).
 6. A new chat panel will open in your right sidebar. 
 
+
+### 4. Gateway Server Configuration (Important)
+For the Obsidian plugin to establish a WebSocket connection via the browser environment, you **must** configure your OpenClaw Gateway to allow connections from the Obsidian app's internal origin.
+
+Open your `openclaw.json` on the server and add the following to the `gateway` section:
+```json
+"gateway": {
+  "controlUi": {
+    "allowedOrigins": [
+      "https://moltbot.redmogu.org",
+      "app://obsidian.md",
+      "null"
+    ]
+  }
+}
+```
+Restart the gateway after making this change.
+
 ## 📝 Document Formatting
 
 When you chat with the AI using the sidebar, the conversation is automatically streamed into the last Markdown document you clicked on. The format looks like this:
