@@ -1,4 +1,4 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin, ItemView, WorkspaceLeaf} from 'obsidian';
+import {App, Editor, MarkdownView, Modal, Notice, Plugin, ItemView, WorkspaceLeaf, MarkdownRenderer} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
 
 export const VIEW_TYPE_CLAW = "claw-view";
@@ -122,7 +122,8 @@ export class ClawView extends ItemView {
                     msgEl.style.background = "var(--interactive-accent)";
                     msgEl.style.color = "var(--text-on-accent)";
                     msgEl.style.borderRadius = "4px";
-                    msgEl.innerText = "You: " + text;
+                    const rawMsg = "**You**: " + text;
+                    MarkdownRenderer.renderMarkdown(rawMsg, msgEl, "/", this.plugin);
                     container.appendChild(msgEl);
                     container.scrollTop = container.scrollHeight;
                 }
@@ -339,7 +340,7 @@ export default class MyPlugin extends Plugin {
 							const view = leaves[0]?.view as any;
 							const container = view.contentEl.querySelector(".claw-messages");
 							if (container) {
-								let lastMsg = container.lastElementChild;
+								let lastMsg = container.lastElementChild as HTMLElement;
 								if (!lastMsg || !lastMsg.classList.contains("claw-ai-message")) {
 									lastMsg = document.createElement("div");
 									lastMsg.classList.add("claw-ai-message");
@@ -347,12 +348,21 @@ export default class MyPlugin extends Plugin {
 									lastMsg.style.padding = "8px";
 									lastMsg.style.background = "var(--background-secondary)";
 									lastMsg.style.borderRadius = "4px";
-									lastMsg.style.whiteSpace = "pre-wrap"; 
-									lastMsg.innerText = "🐱: " + message;
+									// store raw markdown in dataset
+									lastMsg.dataset.raw = "🐱: " + message;
 									container.appendChild(lastMsg);
 								} else {
-									lastMsg.innerText += message;
+									lastMsg.dataset.raw = (lastMsg.dataset.raw || "") + message;
 								}
+								
+								// Re-render the markdown
+								lastMsg.empty();
+								MarkdownRenderer.renderMarkdown(
+									lastMsg.dataset.raw,
+									lastMsg,
+									"/", // sourcePath
+									this // inside MyPlugin
+								);
 								container.scrollTop = container.scrollHeight;
 							}
 						}
