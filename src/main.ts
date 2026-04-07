@@ -254,10 +254,21 @@ export default class MyPlugin extends Plugin {
         this.addCommand({
             id: 'claw-ask-selection',
             name: 'Ask Claw about Selected Text',
-            editorCallback: (editor: Editor, view: MarkdownView) => {
+            callback: () => {
+                let editor = this.lastActiveEditor;
+                if (!editor) {
+                    const mdLeaves = this.app.workspace.getLeavesOfType("markdown");
+                    if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
+                }
+                
+                if (!editor) {
+                    new Notice("Claw: Please open and click inside a markdown file first.");
+                    return;
+                }
+                
                 const selectedText = editor.getSelection();
                 if (!selectedText || selectedText.trim().length === 0) {
-                    new Notice("Claw: No text selected.");
+                    new Notice("Claw: No text currently selected in the active document.");
                     return;
                 }
                 
