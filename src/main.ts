@@ -3,6 +3,39 @@ import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
 
 export const VIEW_TYPE_CLAW = "claw-view";
 
+class ClawPromptModal extends Modal {
+    onSubmit: (result: string) => void;
+    result: string;
+
+    constructor(app: App, onSubmit: (result: string) => void) {
+        super(app);
+        this.onSubmit = onSubmit;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.createEl("h4", { text: "Ask Claw about Selection" });
+        
+        const input = contentEl.createEl("textarea", {
+            placeholder: "E.g., Rewrite this in a professional tone...",
+            attr: { style: "width: 100%; height: 100px; resize: none; margin-bottom: 10px;" }
+        });
+        
+        const btnContainer = contentEl.createEl("div", { attr: { style: "display: flex; justify-content: flex-end; gap: 8px;" } });
+        
+        const btnSubmit = btnContainer.createEl("button", { text: "Send to Claw", cls: "mod-cta" });
+        btnSubmit.addEventListener("click", () => {
+            this.onSubmit(input.value.trim());
+            this.close();
+        });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
 export class ClawView extends ItemView {
     plugin: MyPlugin;
 
@@ -217,6 +250,43 @@ export default class MyPlugin extends Plugin {
 				this.activateView();
 			}
 		});
+
+        this.addCommand({
+            id: 'claw-ask-selection',
+            name: 'Ask Claw about Selected Text',
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                const selectedText = editor.getSelection();
+                if (!selectedText || selectedText.trim().length === 0) {
+                    new Notice("Claw: No text selected.");
+                    return;
+                }
+                
+                // Open a quick prompt modal
+                const onSubmit = (prompt: string) => {
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        const finalMessage = `[Obsidian Selected Context]\n\`\`\`markdown\n${selectedText}\n\`\`\`\n\n${prompt || 'Please review and rewrite this selected text:'}`;
+                        
+                        const payload = {
+                            type: "req",
+                            id: Date.now().toString(),
+                            method: "chat.send",
+                            params: {
+                                message: finalMessage,
+                                sessionKey: this.settings.sessionKey || "agent:main:obsidian",
+                                idempotencyKey: Date.now().toString()
+                            }
+                        };
+                        this.ws.send(JSON.stringify(payload));
+                        new Notice("Sent selection to Claw!");
+                        this.activateView(); // Show the chat view to see the response
+                    } else {
+                        new Notice("Claw: WebSocket is not connected.");
+                    }
+                };
+                
+                new ClawPromptModal(this.app, onSubmit).open();
+            }
+        });
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 	}
