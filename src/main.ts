@@ -216,6 +216,7 @@ export class ClawView extends ItemView {
 export default class MyPlugin extends Plugin {
 	_docStreaming: boolean = false;
 	lastActiveEditor: Editor | null = null;
+    lastKnownSelection: string = "";
 	settings: MyPluginSettings;
 	ws: WebSocket | null = null;
 	pingInterval: number | null = null;
@@ -223,13 +224,40 @@ export default class MyPlugin extends Plugin {
 	isEstablished: boolean = false;
 
 	async onload() {
+        // Track the active editor
 		this.registerEvent(
 			this.app.workspace.on('active-leaf-change', (leaf) => {
 				if (leaf?.view instanceof MarkdownView) {
 					this.lastActiveEditor = leaf.view.editor;
+                    const sel = this.lastActiveEditor.getSelection();
+                    if (sel) {
+                        this.lastKnownSelection = sel;
+                    }
 				}
 			})
 		);
+
+        // Crucial: Track selection changes dynamically
+        this.registerEvent(
+            this.app.workspace.on('editor-change', (editor, info) => {
+                const sel = editor.getSelection();
+                // Only update if there is a real selection, 
+                // so we don't accidentally overwrite it with an empty string when focus is lost
+                if (sel && sel.trim().length > 0) {
+                    this.lastKnownSelection = sel;
+                }
+            })
+        );
+        
+        // Another safety net: Check selection when mouse unclicks inside an editor
+        this.registerDomEvent(document, 'mouseup', (evt: MouseEvent) => {
+            if (this.lastActiveEditor) {
+                const sel = this.lastActiveEditor.getSelection();
+                if (sel && sel.trim().length > 0) {
+                    this.lastKnownSelection = sel;
+                }
+            }
+        });
 		await this.loadSettings();
 
 		this.connectWebSocket();
@@ -261,14 +289,11 @@ export default class MyPlugin extends Plugin {
                     if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
                 }
                 
-                if (!editor) {
-                    new Notice("Claw: Please open and click inside a markdown file first.");
-                    return;
-                }
+                // Fallback to currently selected text if available, otherwise use our tracked 'lastKnownSelection'
+                let selectedText = editor?.getSelection() || this.lastKnownSelection;
                 
-                const selectedText = editor.getSelection();
                 if (!selectedText || selectedText.trim().length === 0) {
-                    new Notice("Claw: No text currently selected in the active document.");
+                    new Notice("Claw: No text currently selected in the active document. Please highlight some text first.");
                     return;
                 }
                 
