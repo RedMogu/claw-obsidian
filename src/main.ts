@@ -241,21 +241,28 @@ export default class MyPlugin extends Plugin {
         this.registerEvent(
             this.app.workspace.on('editor-change', (editor, info) => {
                 const sel = editor.getSelection();
-                // Only update if there is a real selection, 
-                // so we don't accidentally overwrite it with an empty string when focus is lost
                 if (sel && sel.trim().length > 0) {
                     this.lastKnownSelection = sel;
                 }
             })
         );
         
-        // Another safety net: Check selection when mouse unclicks inside an editor
+        // Safety net: Check selection when mouse unclicks inside ANY view (crucial for Reading Mode)
         this.registerDomEvent(document, 'mouseup', (evt: MouseEvent) => {
+            // First try active editor if available
             if (this.lastActiveEditor) {
-                const sel = this.lastActiveEditor.getSelection();
-                if (sel && sel.trim().length > 0) {
-                    this.lastKnownSelection = sel;
+                const editorSel = this.lastActiveEditor.getSelection();
+                if (editorSel && editorSel.trim().length > 0) {
+                    this.lastKnownSelection = editorSel;
+                    return;
                 }
+            }
+            
+            // If we are in Reading Mode (Preview), the editor might not have a selection.
+            // We fallback to the browser's native window selection!
+            const nativeSelection = window.getSelection()?.toString();
+            if (nativeSelection && nativeSelection.trim().length > 0) {
+                this.lastKnownSelection = nativeSelection;
             }
         });
 		await this.loadSettings();
@@ -289,11 +296,24 @@ export default class MyPlugin extends Plugin {
                     if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
                 }
                 
-                // Fallback to currently selected text if available, otherwise use our tracked 'lastKnownSelection'
-                let selectedText = editor?.getSelection() || this.lastKnownSelection;
+                // Fallback 1: Try reading from currently active Editor (Live Preview / Source mode)
+                let selectedText = editor?.getSelection();
+                
+                // Fallback 2: Try reading from the browser's native selection (Reading mode)
+                if (!selectedText || selectedText.trim().length === 0) {
+                    const nativeSelection = window.getSelection()?.toString();
+                    if (nativeSelection && nativeSelection.trim().length > 0) {
+                        selectedText = nativeSelection;
+                    }
+                }
+                
+                // Fallback 3: Use the aggressive tracked last known selection (Ghost Tracker)
+                if (!selectedText || selectedText.trim().length === 0) {
+                    selectedText = this.lastKnownSelection;
+                }
                 
                 if (!selectedText || selectedText.trim().length === 0) {
-                    new Notice("Claw: No text currently selected in the active document. Please highlight some text first.");
+                    new Notice("Claw: No text currently selected. Please highlight text in either Edit or Reading mode first.");
                     return;
                 }
                 
