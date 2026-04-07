@@ -108,9 +108,17 @@ export class ClawView extends ItemView {
                         if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
                     }
                     if (editor) {
-                        const docContent = editor.getValue();
-                        const userQuery = text.replace('/askdoc', '').trim() || 'Please review this document:';
-                        finalMessage = `[Obsidian Document Context]\n\`\`\`markdown\n${docContent}\n\`\`\`\n\n${userQuery}`;
+                        const selectedText = editor.getSelection();
+                        const userQuery = text.replace('/askdoc', '').trim();
+                        
+                        if (selectedText && selectedText.trim().length > 0) {
+                            const defaultQuery = userQuery || 'Please review this selected text:';
+                            finalMessage = `[Obsidian Selected Context]\n\`\`\`markdown\n${selectedText}\n\`\`\`\n\n${defaultQuery}`;
+                        } else {
+                            const docContent = editor.getValue();
+                            const defaultQuery = userQuery || 'Please review this document:';
+                            finalMessage = `[Obsidian Document Context]\n\`\`\`markdown\n${docContent}\n\`\`\`\n\n${defaultQuery}`;
+                        }
                     } else {
                         new Notice("No active document found for /askdoc");
                     }
