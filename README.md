@@ -80,3 +80,7 @@ If you ever plan to modify this plugin, here are a few pitfalls we ran into duri
 2. **Keep-Alive (Heartbeat)**: The Gateway does not have a generic `ping` method. To keep the WebSocket alive, you must poll the `health` method every ~30 seconds.
 3. **Session Leakage**: Gateway broadcasts \`agent\` and \`chat.message\` events to all connected clients. If you don't explicitly filter by \`sessionKey\` in your `onmessage` handler, your Obsidian plugin will print replies meant for your WhatsApp or Telegram bots!
 4. **Obsidian Active View Focus**: When a user clicks the input box inside your custom sidebar view, the main Markdown editor **loses focus**. \`app.workspace.getActiveViewOfType(MarkdownView)\` will return \`null\`. The solution is to listen to \`active-leaf-change\` globally and cache the last known Markdown editor to ensure "Dual-Write" always finds a target document.
+
+## Commands & Workflows 🪄
+- **`/askdoc` (v1.0.36+)**: Type `/askdoc` followed by your prompt in the chat box to send the *entire text of your currently active markdown document* as context to OpenClaw. 
+  *Example*: Open a messy raw web-scrape in your editor, and type `/askdoc Please summarize this architecture and rewrite it in a professional engineering tone without AI fluff.` OpenClaw will read the file and insert the beautifully formatted result directly beneath your cursor.
