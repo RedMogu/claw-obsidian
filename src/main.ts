@@ -100,12 +100,28 @@ export class ClawView extends ItemView {
                     new Notice("WebSocket is connecting (handshake pending), please wait.");
                     return;
                 }
+                let finalMessage = text;
+                if (text.startsWith("/askdoc")) {
+                    let editor = this.plugin.lastActiveEditor;
+                    if (!editor) {
+                        const mdLeaves = this.plugin.app.workspace.getLeavesOfType("markdown");
+                        if (mdLeaves.length > 0) editor = (mdLeaves[0]?.view as MarkdownView)?.editor;
+                    }
+                    if (editor) {
+                        const docContent = editor.getValue();
+                        const userQuery = text.replace('/askdoc', '').trim() || 'Please review this document:';
+                        finalMessage = `[Obsidian Document Context]\n\`\`\`markdown\n${docContent}\n\`\`\`\n\n${userQuery}`;
+                    } else {
+                        new Notice("No active document found for /askdoc");
+                    }
+                }
+
                 const payload = {
                     type: "req",
                     id: Date.now().toString(),
                     method: "chat.send",
                     params: {
-                        message: text,
+                        message: finalMessage,
                         sessionKey: this.plugin.settings.sessionKey || "agent:main:obsidian",
                         idempotencyKey: Date.now().toString()
                     }
