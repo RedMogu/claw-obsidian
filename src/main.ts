@@ -60,10 +60,11 @@ export class ClawView extends ItemView {
         const container = this.contentEl;
         
         container.empty();
-
-        const root = container.createEl("div", { cls: "claw-view-container" });
+        container.classList.remove("claw-view-container");
 
         
+        const root = container.createEl("div", { cls: "claw-chat-view-root" });
+
         const headerDiv = root.createEl("div", { cls: "claw-chat-topbar" });
         
         headerDiv.createEl("h4", { text: "Claw Chat", cls: "claw-chat-header" });
