@@ -1,59 +1,8 @@
-.claw-chat-view-root {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	min-height: 0;
-}
+/*
 
-.claw-chat-topbar {
-	align-items: center;
-	display: flex;
-	gap: 12px;
-	justify-content: space-between;
-}
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
 
-.claw-chat-header {
-	margin: 0;
-}
+If your plugin does not need CSS, delete this file.
 
-.claw-sync-label {
-	align-items: center;
-	cursor: pointer;
-	display: flex;
-	flex: 0 0 auto;
-	font-size: 0.85em;
-	gap: 6px;
-	white-space: nowrap;
-}
-
-.claw-chat-box {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	min-height: 0;
-}
-
-.claw-messages,
-.claw-ai-message {
-	user-select: text !important;
-	-webkit-user-select: text !important;
-}
-
-.claw-messages {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	max-height: min(55vh, 520px);
-	min-height: 120px;
-	overflow: auto;
-	padding: 10px;
-}
-
-.claw-chat-input {
-	max-height: 160px;
-	min-height: 72px;
-	resize: vertical;
-}
-
-.claw-send-button {
-	cursor: pointer;
-}
+*/

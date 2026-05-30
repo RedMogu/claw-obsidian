@@ -60,16 +60,21 @@ export class ClawView extends ItemView {
         const container = this.contentEl;
         
         container.empty();
-        container.classList.remove("claw-view-container");
 
         
-        const root = container.createEl("div", { cls: "claw-chat-view-root" });
-
-        const headerDiv = root.createEl("div", { cls: "claw-chat-topbar" });
+        const headerDiv = container.createEl("div");
+        headerDiv.style.display = "flex";
+        headerDiv.style.justifyContent = "space-between";
+        headerDiv.style.alignItems = "center";
         
         headerDiv.createEl("h4", { text: "Claw Chat", cls: "claw-chat-header" });
         
-        const syncLabel = headerDiv.createEl("label", { cls: "claw-sync-label" });
+        const syncLabel = headerDiv.createEl("label");
+        syncLabel.style.display = "flex";
+        syncLabel.style.alignItems = "center";
+        syncLabel.style.gap = "4px";
+        syncLabel.style.fontSize = "0.85em";
+        syncLabel.style.cursor = "pointer";
         
         const syncCheckbox = syncLabel.createEl("input", { type: "checkbox" });
         syncCheckbox.checked = this.plugin.settings.syncToDocument !== false; // default true
@@ -81,16 +86,40 @@ export class ClawView extends ItemView {
         syncLabel.createEl("span", { text: "Sync to Editor" });
 
 
-        const chatBox = root.createEl("div", { cls: "claw-chat-box" });
+        const chatBox = container.createEl("div", { cls: "claw-chat-box" });
+        chatBox.style.display = "flex";
+        chatBox.style.flexDirection = "column";
+        chatBox.style.gap = "10px";
+        chatBox.style.height = "100%";
 
         const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
+        // Inject global CSS for selection
+        if (!document.getElementById("claw-styles")) {
+            const style = document.createElement("style");
+            style.id = "claw-styles";
+            style.innerHTML = `
+                .claw-messages { user-select: text !important; -webkit-user-select: text !important; }
+                .claw-ai-message { user-select: text !important; -webkit-user-select: text !important; }
+            `;
+            document.head.appendChild(style);
+        }
+        messagesContainer.style.flexGrow = "2";
+        messagesContainer.style.overflowY = "auto";
+        messagesContainer.style.border = "1px solid var(--background-modifier-border)";
+        messagesContainer.style.padding = "10px";
+        messagesContainer.style.borderRadius = "4px";
+        messagesContainer.style.userSelect = "text";
+        messagesContainer.style.webkitUserSelect = "text";
 
         const textarea = chatBox.createEl("textarea", {
-            placeholder: "Type a message...",
-            cls: "claw-chat-input"
+            placeholder: "Type a message..."
         });
+        textarea.style.flexGrow = "1";
+        textarea.style.resize = "none";
+        textarea.style.minHeight = "100px";
 
-        const button = chatBox.createEl("button", { text: "Send", cls: "claw-send-button" });
+        const button = chatBox.createEl("button", { text: "Send" });
+        button.style.cursor = "pointer";
 
         button.addEventListener("click", () => {
             const text = textarea.value.trim();
