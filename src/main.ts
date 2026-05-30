@@ -60,10 +60,11 @@ export class ClawView extends ItemView {
         const container = this.contentEl;
         
         container.empty();
-        container.addClass("claw-view-container");
+
+        const root = container.createEl("div", { cls: "claw-view-container" });
 
         
-        const headerDiv = container.createEl("div", { cls: "claw-chat-topbar" });
+        const headerDiv = root.createEl("div", { cls: "claw-chat-topbar" });
         
         headerDiv.createEl("h4", { text: "Claw Chat", cls: "claw-chat-header" });
         
@@ -79,7 +80,7 @@ export class ClawView extends ItemView {
         syncLabel.createEl("span", { text: "Sync to Editor" });
 
 
-        const chatBox = container.createEl("div", { cls: "claw-chat-box" });
+        const chatBox = root.createEl("div", { cls: "claw-chat-box" });
 
         const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
 
