@@ -90,7 +90,7 @@ export class ClawView extends ItemView {
         chatBox.style.display = "flex";
         chatBox.style.flexDirection = "column";
         chatBox.style.gap = "10px";
-        chatBox.style.height = "100%";
+        chatBox.style.height = "auto";
 
         const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
         // Inject global CSS for selection
@@ -103,7 +103,8 @@ export class ClawView extends ItemView {
             `;
             document.head.appendChild(style);
         }
-        messagesContainer.style.flexGrow = "2";
+        messagesContainer.style.flexGrow = "0";
+        messagesContainer.style.maxHeight = "min(55vh, 520px)";
         messagesContainer.style.overflowY = "auto";
         messagesContainer.style.border = "1px solid var(--background-modifier-border)";
         messagesContainer.style.padding = "10px";
@@ -114,9 +115,10 @@ export class ClawView extends ItemView {
         const textarea = chatBox.createEl("textarea", {
             placeholder: "Type a message..."
         });
-        textarea.style.flexGrow = "1";
-        textarea.style.resize = "none";
-        textarea.style.minHeight = "100px";
+        textarea.style.flexGrow = "0";
+        textarea.style.resize = "vertical";
+        textarea.style.minHeight = "72px";
+        textarea.style.maxHeight = "160px";
 
         const button = chatBox.createEl("button", { text: "Send" });
         button.style.cursor = "pointer";
