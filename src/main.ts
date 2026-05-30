@@ -60,21 +60,14 @@ export class ClawView extends ItemView {
         const container = this.contentEl;
         
         container.empty();
+        container.addClass("claw-view-container");
 
         
-        const headerDiv = container.createEl("div");
-        headerDiv.style.display = "flex";
-        headerDiv.style.justifyContent = "space-between";
-        headerDiv.style.alignItems = "center";
+        const headerDiv = container.createEl("div", { cls: "claw-chat-topbar" });
         
         headerDiv.createEl("h4", { text: "Claw Chat", cls: "claw-chat-header" });
         
-        const syncLabel = headerDiv.createEl("label");
-        syncLabel.style.display = "flex";
-        syncLabel.style.alignItems = "center";
-        syncLabel.style.gap = "4px";
-        syncLabel.style.fontSize = "0.85em";
-        syncLabel.style.cursor = "pointer";
+        const syncLabel = headerDiv.createEl("label", { cls: "claw-sync-label" });
         
         const syncCheckbox = syncLabel.createEl("input", { type: "checkbox" });
         syncCheckbox.checked = this.plugin.settings.syncToDocument !== false; // default true
@@ -87,41 +80,15 @@ export class ClawView extends ItemView {
 
 
         const chatBox = container.createEl("div", { cls: "claw-chat-box" });
-        chatBox.style.display = "flex";
-        chatBox.style.flexDirection = "column";
-        chatBox.style.gap = "10px";
-        chatBox.style.height = "auto";
 
         const messagesContainer = chatBox.createEl("div", { cls: "claw-messages" });
-        // Inject global CSS for selection
-        if (!document.getElementById("claw-styles")) {
-            const style = document.createElement("style");
-            style.id = "claw-styles";
-            style.innerHTML = `
-                .claw-messages { user-select: text !important; -webkit-user-select: text !important; }
-                .claw-ai-message { user-select: text !important; -webkit-user-select: text !important; }
-            `;
-            document.head.appendChild(style);
-        }
-        messagesContainer.style.flexGrow = "0";
-        messagesContainer.style.maxHeight = "min(55vh, 520px)";
-        messagesContainer.style.overflowY = "auto";
-        messagesContainer.style.border = "1px solid var(--background-modifier-border)";
-        messagesContainer.style.padding = "10px";
-        messagesContainer.style.borderRadius = "4px";
-        messagesContainer.style.userSelect = "text";
-        messagesContainer.style.webkitUserSelect = "text";
 
         const textarea = chatBox.createEl("textarea", {
-            placeholder: "Type a message..."
+            placeholder: "Type a message...",
+            cls: "claw-chat-input"
         });
-        textarea.style.flexGrow = "0";
-        textarea.style.resize = "vertical";
-        textarea.style.minHeight = "72px";
-        textarea.style.maxHeight = "160px";
 
-        const button = chatBox.createEl("button", { text: "Send" });
-        button.style.cursor = "pointer";
+        const button = chatBox.createEl("button", { text: "Send", cls: "claw-send-button" });
 
         button.addEventListener("click", () => {
             const text = textarea.value.trim();
