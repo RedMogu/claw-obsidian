@@ -90,7 +90,7 @@ export class ClawView extends ItemView {
 
         const button = chatBox.createEl("button", { text: "Send", cls: "claw-send-button" });
 
-        button.addEventListener("click", () => {
+        const handleSend = () => {
             const text = textarea.value.trim();
             if (!text) {
                 new Notice("Message is empty!");
@@ -173,6 +173,14 @@ export class ClawView extends ItemView {
                 textarea.value = "";
             } else {
                 new Notice("WebSocket is not connected.");
+            }
+        };
+
+        button.addEventListener("click", handleSend);
+        textarea.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && e.shiftKey) {
+                e.preventDefault();
+                handleSend();
             }
         });
     }
